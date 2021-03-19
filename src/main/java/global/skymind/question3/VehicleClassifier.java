@@ -18,13 +18,8 @@ package global.skymind.question3;
  * 3. Put the defined augmentation into a pipeline
  *    (a) Set all probabilities to 0.3
  *    (b) Set shuffle to false
- * 4. Set up the dataset iterator
- *    (a) Instantiate an instance of the VehicleDataSetIterator class
- *    (b) Complete the code in .setup() method
- *    (c) Setup the DataSetIterator using the inputs provided
+ * 4. Set up the dataset iterator in VehicleDataSetIterator and VehicleClassifier
  * 5. Return the train iterator and test iterator from the instantiated setup
- *    (a) Complete the code in .makeIterator() method, .trainIterator() method and .testIterator() method
- *    (b) Return the train iterator and test iterator
  * 6. Define configuration for model
  * 7. Define configuration for early stopping
  *    (a) use ROC as score calculator and use AUC as the calculator metric
@@ -39,6 +34,11 @@ package global.skymind.question3;
    /*
     * Your code here
     */
+
+import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.nd4j.evaluation.classification.Evaluation;
 
 public class VehicleClassifier {
 
@@ -87,7 +87,7 @@ public class VehicleClassifier {
          * Your code here
          */
 
-        EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConfig,config,trainIter);
+        EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConfig, config, trainIter);
         EarlyStoppingResult result = trainer.fit();
 
         MultiLayerNetwork model = (MultiLayerNetwork) result.getBestModel();

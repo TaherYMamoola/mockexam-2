@@ -1,5 +1,17 @@
 package global.skymind.question3;
 
+import org.datavec.api.io.filters.BalancedPathFilter;
+import org.datavec.api.io.filters.PathFilter;
+import org.datavec.api.io.labels.ParentPathLabelGenerator;
+import org.datavec.api.split.InputSplit;
+import org.datavec.image.loader.BaseImageLoader;
+import org.datavec.image.recordreader.ImageRecordReader;
+import org.datavec.image.transform.ImageTransform;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+
+import java.io.File;
+import java.util.Random;
+
 public class VehicleDataSetIterator {
 
     private static int imgHeight;
@@ -19,7 +31,7 @@ public class VehicleDataSetIterator {
     }
 
     public void setup(File file, int height, int width, int channels, int numClass, ImageTransform imageTransform,
-                             int batchSize, double trainPerc) {
+                      int batchSize, double trainPerc) {
 
         imgHeight = height;
         imgWidth = width;

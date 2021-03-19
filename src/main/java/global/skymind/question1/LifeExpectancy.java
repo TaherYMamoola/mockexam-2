@@ -6,22 +6,19 @@ package global.skymind.question1;
 
  * Here, the hints of what you should do is given below:
 
- * Step 1: Read the CSV file.
- * Step 2: Specify the transform process:
- *          (a) convert "status" into categorical - "developing" and "developed"
- *          (b) convert "status" to one-hot
- * Step 3: Put each instances into the List<List<Writable>>.
- * Step 4: Execute the transform process.
- * Step 5: Perform shuffling of dataset with seed number provided. Hint: There is only 1 target.
- * Step 6: Split the dataset using train fraction provided and assign the large fraction as trainAndVal
+ * 1. Read the CSV file.
+ * 2. Specify the transform process:
+ *    (a) convert "status" into categorical - "developing" and "developed"
+ *    (b) convert "status" to one-hot
+ * 3. Execute the transform process.
+ * 4. Split the dataset using train fraction provided and assign the large fraction as trainAndVal
  *         while the another as test split.
- * Step 7: Define feature scaling. Try to experiment with both feature scaling methods.
- * Step 8: Perform scaling only on trainAndVal
- * Step 9: Perform K-fold cross validation. Take k=5.
- * Step 10: Write the model config in the static method and return it in the main method.
- *          Hint: use the following input parameters provided - seed and learning rate
- * Step 11: Perform training
- * Step 12: Perform evaluation on trainAndVal and test set
+ * 5. Define feature scaling. Perform scaling only on trainAndVal
+ * 6. Perform K-fold cross validation. Take k=5.
+ * 7. Write the model config in the static method and return it in the main method.
+ *    Hint: use the following input parameters provided - seed and learning rate
+ * 8. Perform training
+ * 9. Perform evaluation on trainAndVal and test set
 
  * Location of each step is marked using the following annotation:
    /*
@@ -33,8 +30,15 @@ import org.datavec.api.transform.TransformProcess;
 import org.datavec.api.transform.filter.FilterInvalidValues;
 import org.datavec.api.transform.schema.Schema;
 import org.datavec.api.writable.Writable;
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.dataset.ViewIterator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,10 +114,6 @@ public class LifeExpectancy {
          * Your code here
          */
 
-        /*
-         * Your code here
-         */
-
         ViewIterator testIter = new ViewIterator(test, test.numExamples());
         testIter.setPreProcessor(scaler);
 
@@ -141,6 +141,7 @@ public class LifeExpectancy {
         /*
          * Your code here
          */
+
         System.out.println("Train & Validation evaluation\n"+evalTrain.stats());
         System.out.println("Test evaluation\n"+evalTest.stats());
 
@@ -160,7 +161,6 @@ public class LifeExpectancy {
          * Your code here
          */
 
-        return null; //edit here too
     }
 
 }
