@@ -1,4 +1,4 @@
-package global.skymind.question1;
+package global.skymind.mockexam2.question1;
 
 /*
  * Before you start, you should:
@@ -38,7 +38,6 @@ import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.dataset.ViewIterator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

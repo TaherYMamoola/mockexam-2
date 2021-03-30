@@ -1,4 +1,4 @@
-package global.skymind.question3;
+package global.skymind.mockexam2.question3;
 
 import org.datavec.api.io.filters.BalancedPathFilter;
 import org.datavec.api.io.filters.PathFilter;

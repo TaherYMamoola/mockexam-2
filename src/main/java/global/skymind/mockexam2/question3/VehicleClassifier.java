@@ -1,4 +1,4 @@
-package global.skymind.question3;
+package global.skymind.mockexam2.question3;
 
 /* ===================================================================
  * We will solve a task of classifying vehicles.
