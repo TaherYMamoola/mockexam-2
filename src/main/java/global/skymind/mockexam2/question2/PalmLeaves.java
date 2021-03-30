@@ -1,4 +1,4 @@
-package global.skymind.question2;
+package global.skymind.mockexam2.question2;
 
 /* ===================================================================
  * We will solve a task of classifying palm leaves' conditions.
