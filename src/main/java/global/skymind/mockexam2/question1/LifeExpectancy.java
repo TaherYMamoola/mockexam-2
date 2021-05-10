@@ -25,19 +25,41 @@ package global.skymind.mockexam2.question1;
     * Your code here
     */
 
+import org.datavec.api.records.reader.RecordReader;
 import org.datavec.api.records.reader.impl.collection.CollectionRecordReader;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.split.FileSplit;
 import org.datavec.api.transform.TransformProcess;
 import org.datavec.api.transform.filter.FilterInvalidValues;
 import org.datavec.api.transform.schema.Schema;
 import org.datavec.api.writable.Writable;
+import org.datavec.local.transforms.LocalTransformExecutor;
+import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
+import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.layers.DenseLayer;
+import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
+import org.nd4j.common.io.ClassPathResource;
+import org.nd4j.evaluation.classification.Evaluation;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.ViewIterator;
+//import org.nd4j.linalg.dataset.api.DataSet;
+import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.dataset.api.iterator.KFoldIterator;
+import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
+import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,11 +71,11 @@ public class LifeExpectancy {
     private static double trainPerc = 0.7;
     private static List<List<Writable>> transformed;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
-        /*
-         * Your code here
-         */
+        File dataFile = new ClassPathResource("LifeExpectancy/life_exp.csv").getFile();
+        CSVRecordReader CSVreader = new CSVRecordReader();
+        CSVreader.initialize(new FileSplit(dataFile));
 
         //define schema
         Schema schema = new Schema.Builder()
@@ -75,21 +97,22 @@ public class LifeExpectancy {
 
         TransformProcess tp = new TransformProcess.Builder(schema)
                 .removeColumns("country")
-                /*
-                 * Your code here
-                 */
+                .categoricalToOneHot("status")
                 .filter(new FilterInvalidValues())
                 .build();
 
         List<List<Writable>> original = new ArrayList<>();
+        while(CSVreader.hasNext()){
+            List<Writable> data = CSVreader.next();
+            original.add(data);
+        }
 
-        /*
-         * Your code here
-         */
+        List<List<Writable>> transformedData = LocalTransformExecutor.execute(original,tp);
 
-        /*
-         * Your code here
-         */
+        //  Printing out the transformed data
+        for (int i = 0; i< transformedData.size();i++){
+            System.out.println(transformedData.get(i));
+        }
 
         System.out.println("Schema before transformed: \n" + tp.getInitialSchema());
         System.out.println("Schema after transformed: \n" + tp.getFinalSchema());
@@ -101,49 +124,54 @@ public class LifeExpectancy {
 
         CollectionRecordReader crr = new CollectionRecordReader(transformed);
 
-        /*
-         * Your code here
-         */
+        DataSetIterator dataSetIter = new RecordReaderDataSetIterator(crr,10,3,3,true);
+        DataSet dataSet = dataSetIter.next();
+        dataSet.shuffle();
+        //create KFold Object
+        KFoldIterator kFoldIterator = new KFoldIterator(5, (org.nd4j.linalg.dataset.DataSet) dataSet);
+        int i = 1;
+        while (kFoldIterator.hasNext()) {
+            DataSet currDataSet = kFoldIterator.next();
+            INDArray trainFoldFeatures = currDataSet.getFeatures();
+            INDArray trainFoldLabels = currDataSet.getLabels();
+            INDArray testFoldFeatures = kFoldIterator.testFold().getFeatures();
+            INDArray testFoldLabels = kFoldIterator.testFold().getLabels();
+            org.nd4j.linalg.dataset.DataSet trainDataSet = new org.nd4j.linalg.dataset.DataSet(trainFoldFeatures, trainFoldLabels);
+            i++;
 
-        /*
-         * Your code here
-         */
 
-        /*
-         * Your code here
-         */
+//        ViewIterator testIter = new ViewIterator(test, test.numExamples());
+//        testIter.setPreProcessor(scaler);
+            //scale the dataset
+            NormalizerMinMaxScaler scaler = new NormalizerMinMaxScaler();
+            scaler.fit(trainDataSet);
+            scaler.transform(trainFoldFeatures);
+            scaler.transform(testFoldFeatures);
 
-        ViewIterator testIter = new ViewIterator(test, test.numExamples());
-        testIter.setPreProcessor(scaler);
+            MultiLayerConfiguration config = getConfig(seed,lr,21,1);
+            MultiLayerNetwork model = new MultiLayerNetwork(config);
 
-        /*
-         * Your code here
-         */
+            InMemoryStatsStorage storage = new InMemoryStatsStorage();
+            UIServer server = UIServer.getInstance();
+            server.attach(storage);
+            model.setListeners(new StatsListener(storage, 1), new ScoreIterationListener(10));
 
-        /*
-         * Your code here
-         */
+            model.init();
+            //train the data
+            for (int j = 0; j < epoch; j++) {
+                model.fit(trainDataSet);
+            }
+            System.out.println(model.summary());
 
-        MultiLayerNetwork model = new MultiLayerNetwork(config);
+            Evaluation evalTrain = new Evaluation();
+            evalTrain.eval(trainFoldLabels, model.output(trainFoldFeatures));
 
-        InMemoryStatsStorage storage = new InMemoryStatsStorage();
-        UIServer server = UIServer.getInstance();
-        server.attach(storage);
-        model.setListeners(new StatsListener(storage,1),new ScoreIterationListener(10));
+            Evaluation evalTest = new Evaluation();
+            evalTest.eval(testFoldLabels, model.output(testFoldFeatures));
 
-        model.init();
-        /*
-         * Your code here
-         */
-        System.out.println(model.summary());
-
-        /*
-         * Your code here
-         */
-
-        System.out.println("Train & Validation evaluation\n"+evalTrain.stats());
-        System.out.println("Test evaluation\n"+evalTest.stats());
-
+            System.out.println("Train & Validation evaluation\n" + evalTrain.stats());
+            System.out.println("Test evaluation\n" + evalTest.stats());
+        }
     }
 
     private static MultiLayerConfiguration getConfig(int seedNum, double learningRate, int nFeatures, int nClass){
@@ -156,10 +184,24 @@ public class LifeExpectancy {
           4. use MSE as loss function
          */
 
-        /*
-         * Your code here
-         */
-
+        MultiLayerConfiguration config = new NeuralNetConfiguration.Builder()
+                .seed(seedNum)
+                .updater(new Adam(learningRate))
+                .weightInit(WeightInit.XAVIER)
+                .list()
+                .layer(new DenseLayer.Builder()
+                        .nIn(nFeatures)
+                        .nOut(100)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new OutputLayer.Builder()
+                        .nIn(100)
+                        .nOut(nClass)
+                        .activation(Activation.IDENTITY)
+                        .lossFunction(LossFunctions.LossFunction.MSE)
+                        .build())
+                .build();
+        return config;
     }
 
 }
